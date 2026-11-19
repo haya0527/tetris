@@ -113,11 +113,12 @@ class Tetris:
             self.board = [[' '] * COLS for _ in range(removed)] + remaining
             self.lines += removed
             self.score += (0, 100, 300, 500, 800)[removed] * (1 + self.lines // 10)
+            self.level = 1 + self.lines // 5
         return removed
 
     @property
     def fall_interval(self):
-        return max(0.10, 0.65 - (self.lines // 5) * 0.07)
+        return max(0.10, 0.65 - (self.level - 1) * 0.07)
 
     def render(self):
         screen = [row[:] for row in self.board]
@@ -134,7 +135,7 @@ class Tetris:
                     screen[py][px] = self.kind
 
 
-        out = ['=== ASCII TETRIS ===', f'SCORE {self.score}    LINES {self.lines}    NEXT {self.next_kind}', '+' + '--' * COLS + '+']
+        out = ['=== ASCII TETRIS ===', f'SCORE {self.score}    LINES {self.lines}    LEVEL {self.level}    NEXT{self.next_kind}', '+' + '--' * COLS + '+']
         out += ['|' + ''.join('..' if c == 'G' else '[]' if c != ' ' else '  ' for c in row) + '|' for row in screen]
         out += ['+' + '--' * COLS + '+', 'A/D:移動 W:回転 S:加速 Space:落下 P:停止 R:再開 Q:終了']
         if self.paused:
@@ -142,6 +143,16 @@ class Tetris:
         if self.game_over:
             out.append('--- GAME OVER ---  Rで再挑戦 / Qで終了')
         return out
+
+    def reset(self):
+        self.board = [[' ' for _ in range(COLS)] for _ in range(ROWS)]
+        self.score = 0
+        self.lines = 0
+        self.level = 1
+        self.game_over = False
+        self.paused = False
+        self.next_kind = self.rng.choice(list(SHAPES))
+        self.spawn()
 
 
 def main():
