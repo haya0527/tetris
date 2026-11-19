@@ -37,6 +37,8 @@ class Tetris:
         self.board = [[' ' for _ in range(COLS)] for _ in range(ROWS)]
         self.score = 0
         self.lines = 0
+        self.level = 1
+        self.combo = 0
         self.game_over = False
         self.paused = False
         self.next_kind = self.rng.choice(list(SHAPES))
@@ -112,8 +114,13 @@ class Tetris:
         if removed:
             self.board = [[' '] * COLS for _ in range(removed)] + remaining
             self.lines += removed
-            self.score += (0, 100, 300, 500, 800)[removed] * (1 + self.lines // 10)
+            self.score += (0, 100, 300, 500, 800)[removed] * self.level
             self.level = 1 + self.lines // 5
+            self.combo += 1
+            combo_bonus = (self.combo - 1) * 50 
+            self.score += combo_bonus
+        else:
+            self.combo = 0
         return removed
 
     @property
@@ -135,7 +142,7 @@ class Tetris:
                     screen[py][px] = self.kind
 
 
-        out = ['=== ASCII TETRIS ===', f'SCORE {self.score}    LINES {self.lines}    LEVEL {self.level}    NEXT{self.next_kind}', '+' + '--' * COLS + '+']
+        out = ['=== ASCII TETRIS ===', f'SCORE {self.score}    LINES {self.lines}    LEVEL {self.level}    COMBO {self.combo}    NEXT{self.next_kind}', '+' + '--' * COLS + '+']
         out += ['|' + ''.join('..' if c == 'G' else '[]' if c != ' ' else '  ' for c in row) + '|' for row in screen]
         out += ['+' + '--' * COLS + '+', 'A/D:移動 W:回転 S:加速 Space:落下 P:停止 R:再開 Q:終了']
         if self.paused:
@@ -149,6 +156,7 @@ class Tetris:
         self.score = 0
         self.lines = 0
         self.level = 1
+        self.combo = 0
         self.game_over = False
         self.paused = False
         self.next_kind = self.rng.choice(list(SHAPES))
