@@ -145,6 +145,8 @@ class Tetris:
         out = ['=== ASCII TETRIS ===', f'SCORE {self.score}    LINES {self.lines}    LEVEL {self.level}    COMBO {self.combo}    NEXT{self.next_kind}', '+' + '--' * COLS + '+']
         out += ['|' + ''.join('..' if c == 'G' else '[]' if c != ' ' else '  ' for c in row) + '|' for row in screen]
         out += ['+' + '--' * COLS + '+', 'A/D:移動 W:回転 S:加速 Space:落下 P:停止 R:再開 Q:終了']
+        if not self.started and not self.game_over:
+            out.append('--- READY --- Spaceでスタート')
         if self.paused:
             out.append('--- PAUSED ---')
         if self.game_over:
@@ -153,6 +155,7 @@ class Tetris:
 
     def reset(self):
         self.board = [[' ' for _ in range(COLS)] for _ in range(ROWS)]
+        self.started = False
         self.score = 0
         self.lines = 0
         self.level = 1
@@ -175,10 +178,16 @@ def main():
             if key == 'r':
                 game.reset()
                 last_fall = time.monotonic()
-            elif key == 'p':
+
+            elif not game.started and key == ' ':
+                game.started = True
+                last_fall = time.monotonic()
+
+            elif key == 'p' and game.started:
                 game.paused = not game.paused
                 last_fall = time.monotonic()
-            elif not game.paused and not game.game_over:
+
+            elif game.started and not game.paused and not game.game_over:
                 if key in ('a', 'left'):
                     game.move(-1, 0)
                 elif key in ('d', 'right'):
@@ -190,7 +199,7 @@ def main():
                 elif key == ' ':
                     game.hard_drop()
             now = time.monotonic()
-            if not game.paused and not game.game_over and now - last_fall >= game.fall_interval:
+            if game.started and not game.paused and not game.game_over and now - last_fall >= game.fall_interval:
                 game.move(0, 1)
                 last_fall = now
             time.sleep(0.035)
